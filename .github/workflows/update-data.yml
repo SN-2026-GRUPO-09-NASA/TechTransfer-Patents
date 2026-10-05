@@ -1,0 +1,26 @@
+name: Atualizar patentes NASA
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: nasa-patentes
+  cancel-in-progress: false
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Coletar e salvar
+        env:
+          SUPABASE_URL: ${{ secrets.https://avplmdbotkyhqhztattm.supabase.co }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2cGxtZGJvdGt5aHFoenRhdHRtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDU3MjQ0MCwiZXhwIjoyMTA2MTQ4NDQwfQ.8mJU1f3LqCuNyGKZJyKOUT8GxC474MxcnURLgkHj0Sg }}
+          NASA_SEARCH_TERM: engine
+        run: python scripts/fetch_nasa.py
+
