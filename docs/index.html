@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patentes NASA · Grupo 09</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#edf3ff;background:#0c1424;color-scheme:dark}body{max-width:1120px;margin:auto;padding:32px 20px}header{border-bottom:1px solid #34435b;padding:24px 0}small,.muted{color:#aebed8}h1{font-size:clamp(2rem,6vw,3.6rem);margin:12px 0}p{line-height:1.6}a{color:#8acaff}.filters{display:flex;gap:18px;flex-wrap:wrap;margin:30px 0}label{display:grid;gap:8px;flex:1;min-width:220px}input,select,button{font:inherit;background:#18263c;border:1px solid #536784;border-radius:8px;color:inherit;padding:12px}button{cursor:pointer}input:focus,select:focus,button:focus{outline:3px solid #8acaff}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}article{padding:24px;border:1px solid #34435b;border-radius:14px;background:#111e32}article h2{font-size:1.2rem;line-height:1.4}.tag{color:#92dbda}dl{font-size:.9rem}dt{color:#aebed8;margin-top:12px}dd{margin:4px 0}footer{margin-top:36px;color:#aebed8}.error{color:#ffb7a8}
+</style>
+<header><small>GRUPO 09 · TECHTRANSFER / PATENTS</small><h1>Da NASA para o mundo.</h1>
+<p>Explore tecnologias do catálogo de patentes da NASA. Recorte inicial: busca por <strong>engine</strong> (motores).</p>
+<p class="muted">Inventor e status individual de licenciamento não estão confirmados nesta fonte. Consulte o catálogo oficial para detalhes.</p>
+<p id="updated" role="status">Consultando última execução…</p></header>
+<div class="filters"><label>Buscar título ou código<input id="search" type="search" placeholder="Digite um título ou código"></label><label>Categoria<select id="category"><option value="">Todas as categorias</option></select></label><button id="reload" type="button">Atualizar painel</button></div>
+<p id="status" role="status">Carregando dados…</p><main id="cards" class="grid"></main>
+<footer>Projeto acadêmico · Dados: <a href="https://technology.nasa.gov/" target="_blank" rel="noopener noreferrer">NASA Technology Transfer</a> · <a href="https://github.com/SN-2026-GRUPO-09-NASA/TechTransfer-Patents">Repositório</a></footer>
+<script>
+const SUPABASE_URL='https://avplmdbotkyhqhztattm.supabase.co';
+// Chave PÚBLICA de leitura. Nunca substituir por service_role ou sb_secret.
+const PUBLIC_KEY='sb_publishable_xjQIkctObECoewZ2wA9kXA_o6ZSaSCQ';
+let rows=[];
+const el=id=>document.getElementById(id);
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function api(path){const response=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers:{apikey:PUBLIC_KEY},signal:AbortSignal.timeout(20000)});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(!Array.isArray(data))throw new Error('Formato inválido');return data;}
+function render(){const term=el('search').value.toLocaleLowerCase('pt-BR');const category=el('category').value;const visible=rows.filter(r=>(!category||r.categoria===category)&&(r.titulo+' '+r.codigo).toLocaleLowerCase('pt-BR').includes(term));el('status').textContent=visible.length+' de '+rows.length+' registros do recorte coletado';el('cards').innerHTML=visible.map(r=>`<article><small class="tag">${escapeHtml(r.categoria||'Sem categoria')}</small><h2>${escapeHtml(r.titulo)}</h2><p>${escapeHtml(r.descricao)}</p><dl><dt>Código / centro NASA</dt><dd>${escapeHtml(r.codigo)} / ${escapeHtml(r.centro||'Não informado')}</dd><dt>Inventor</dt><dd>${escapeHtml(r.inventor||'Não informado pela fonte')}</dd><dt>Status de licenciamento</dt><dd>${escapeHtml(r.status_licenciamento||'Não informado pela fonte')}</dd></dl></article>`).join('');if(!visible.length)el('status').textContent=rows.length?'Nenhum resultado para estes filtros.':'O banco ainda não tem dados. Execute a coleta no GitHub Actions.';}
+async function load(){el('reload').disabled=true;el('status').className='';el('status').textContent='Carregando dados…';el('cards').innerHTML='';rows=[];try{let offset=0;for(;;){const page=await api('patentes?select=codigo,titulo,descricao,categoria,centro,inventor,status_licenciamento&termo_busca=eq.engine&order=nasa_id&limit=500&offset='+offset);rows.push(...page);if(page.length===0)break;offset+=page.length;if(offset>50000)throw new Error('Limite de leitura');}const selected=el('category').value;el('category').innerHTML='<option value="">Todas as categorias</option>'+[...new Set(rows.map(r=>r.categoria).filter(Boolean))].sort().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');el('category').value=selected;render();}catch(error){rows=[];el('status').className='error';el('status').textContent='Não foi possível carregar os dados. Confira se as tabelas e as permissões de leitura foram configuradas ('+error.message+').';}try{const logs=await api('execucoes?select=finalizado_em,status,registros_processados&termo_busca=eq.engine&order=finalizado_em.desc&limit=1');el('updated').textContent=logs.length?'Última execução: '+new Date(logs[0].finalizado_em).toLocaleString('pt-BR')+' · '+logs[0].status+' · '+logs[0].registros_processados+' registros':'Nenhuma execução registrada.';}catch{el('updated').textContent='Não foi possível consultar a última execução.';}finally{el('reload').disabled=false;}}
+el('search').addEventListener('input',render);el('category').addEventListener('change',render);el('reload').addEventListener('click',load);load();
+</script>
+</html>
