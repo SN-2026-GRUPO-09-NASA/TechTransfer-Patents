@@ -13,7 +13,7 @@
 | **Grupo** | Grupo 09 |
 | **Integrantes** | Leonardo, Esther, Yasmim L. |
 | **API NASA escolhida** | TechTransfer / Patents |
-| **IA utilizada** | [PREENCHER: nome da IA das interações 1 a 3]; Claude (interações 4 a 12) |
+| **IA utilizada** | Claude (interações 1 a 12) |
 | **Data de início** | 28-09-2026 |
 | **Data de conclusão** | 13-11-2026 |
 
